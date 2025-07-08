@@ -27,12 +27,15 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Cliente</label>
-                        <select class="form-select" name="cliente_id" required>
-                            <option value="" selected disabled>Selecione um cliente...</option>
-                            {% for cliente in clientes %}
-                            <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="input-group">
+                            <select class="form-select" name="cliente_id" required>
+                                <option value="" selected disabled>Selecione um cliente...</option>
+                                {% for cliente in clientes %}
+                                <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#novoClienteModal" title="Cadastrar Novo Cliente">+</button>
+                        </div>
                     </div>
                     
                     <hr class="my-4">
@@ -123,6 +126,41 @@
     </div>
 </div>
 
+<div class="modal fade" id="novoClienteModal" tabindex="-1" aria-labelledby="novoClienteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="novoClienteModalLabel">Cadastrar Novo Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ url_for('pedidos.novo_cliente') }}" method="POST">
+          <div class="modal-body">
+              <div class="mb-3">
+                  <label class="form-label">Nome</label>
+                  <input type="text" name="nome" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                  <label class="form-label">Telefone</label>
+                  <input type="text" name="telefone" class="form-control">
+              </div>
+              <div class="mb-3">
+                  <label class="form-label">Endereço</label>
+                  <input type="text" name="endereco" class="form-control">
+              </div>
+              <div class="mb-3">
+                  <label class="form-label">Bairro</label>
+                  <input type="text" name="bairro" class="form-control">
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <template id="item-row-template">
     <div class="row g-2 mb-2 align-items-center item-row">
         <input type="hidden" class="item-produto-id" name="produto_id[]">
@@ -142,12 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectProduto = document.getElementById('select-produto');
     const itensContainer = document.getElementById('itens-container');
     const template = document.getElementById('item-row-template');
-    const deliveryFeeInput = document.querySelector('[name="valor_entrega"]');
 
-    if(deliveryFeeInput) {
-        deliveryFeeInput.addEventListener('input', updateTotals);
-    }
-    
     if(addItemBtn) {
         addItemBtn.addEventListener('click', function() {
             const selectedOption = selectProduto.options[selectProduto.selectedIndex];
@@ -180,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
             row.remove();
             updateTotals();
         });
-        row.querySelector('.item-quantidade').addEventListener('input', updateTotals);
+        row.addEventListener('update-item', updateTotals);
     }
 });
 
