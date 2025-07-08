@@ -42,21 +42,28 @@
                     
                     <h5>Itens do Pedido</h5>
                     <div class="row mb-3 align-items-end">
-                        <div class="col-md-7">
+                        <div class="col-sm-8">
                             <label class="form-label">Produto</label>
-                            <select id="select-produto" class="form-select">
-                                <option value="" selected disabled>Selecione um produto para adicionar...</option>
-                                {% for produto in produtos %}
-                                <option value="{{ produto.id }}" data-valor="{{ produto.valor }}">{{ produto.descricao }}</option>
-                                {% endfor %}
-                            </select>
+                             <div class="input-group">
+                                <select id="select-produto" class="form-select">
+                                    <option value="" selected disabled>Selecione um produto para adicionar...</option>
+                                    {% for produto in produtos %}
+                                    <option value="{{ produto.id }}" data-valor="{{ produto.valor }}">{{ produto.descricao }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#novoProdutoModal" title="Cadastrar Novo Produto">+</button>
+                            </div>
                         </div>
-                        <div class="col-md-5">
-                            <button type="button" class="btn btn-outline-primary w-100" id="add-item-btn">Adicionar Produto</button>
+                        <div class="col-sm-4">
+                            <button type="button" class="btn btn-outline-primary w-100" id="add-item-btn">Adicionar</button>
                         </div>
                     </div>
-                    <div id="itens-container" class="mb-3">
-                        </div>
+                    <div id="itens-container" class="mb-3 table-responsive">
+                         <table class="table">
+                            <tbody id="itens-table-body">
+                                </tbody>
+                         </table>
+                    </div>
                     
                     <hr class="my-4">
                     
@@ -70,12 +77,10 @@
                             </div>
                         </div>
                         <div class="col-lg-6 ms-auto">
-                            <div class="row align-items-center">
-                                <label class="col-sm-5 col-form-label fs-5 fw-bold text-end">TOTAL (R$)</label>
-                                <div class="col-sm-7">
-                                    <input type="text" class="form-control fs-5 fw-bold text-end" id="grand-total" value="0,00" readonly>
-                                </div>
-                            </div>
+                           <div class="d-flex justify-content-end align-items-center">
+                               <span class="fs-5 fw-bold me-3">TOTAL:</span>
+                               <span class="fs-4 fw-bolder text-success" id="grand-total">R$ 0,00</span>
+                           </div>
                         </div>
                     </div>
 
@@ -135,22 +140,10 @@
       </div>
       <form action="{{ url_for('pedidos.novo_cliente') }}" method="POST">
           <div class="modal-body">
-              <div class="mb-3">
-                  <label class="form-label">Nome</label>
-                  <input type="text" name="nome" class="form-control" required>
-              </div>
-              <div class="mb-3">
-                  <label class="form-label">Telefone</label>
-                  <input type="text" name="telefone" class="form-control">
-              </div>
-              <div class="mb-3">
-                  <label class="form-label">Endereço</label>
-                  <input type="text" name="endereco" class="form-control">
-              </div>
-              <div class="mb-3">
-                  <label class="form-label">Bairro</label>
-                  <input type="text" name="bairro" class="form-control">
-              </div>
+              <div class="mb-3"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control" required></div>
+              <div class="mb-3"><label class="form-label">Telefone</label><input type="text" name="telefone" class="form-control"></div>
+              <div class="mb-3"><label class="form-label">Endereço</label><input type="text" name="endereco" class="form-control"></div>
+              <div class="mb-3"><label class="form-label">Bairro</label><input type="text" name="bairro" class="form-control"></div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -161,15 +154,36 @@
   </div>
 </div>
 
-<template id="item-row-template">
-    <div class="row g-2 mb-2 align-items-center item-row">
-        <input type="hidden" class="item-produto-id" name="produto_id[]">
-        <div class="col-md-5"><input type="text" class="form-control item-descricao" readonly></div>
-        <div class="col-md-2"><input type="number" class="form-control item-quantidade" name="item_quantidade[]" value="1" min="1" required oninput="this.closest('.item-row').dispatchEvent(new Event('update-item'));"></div>
-        <div class="col-md-2"><input type="text" class="form-control item-valor-unitario" readonly></div>
-        <div class="col-md-2"><input type="text" class="form-control text-end item-total" readonly></div>
-        <div class="col-md-1"><button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">X</button></div>
+<div class="modal fade" id="novoProdutoModal" tabindex="-1" aria-labelledby="novoProdutoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="novoProdutoModalLabel">Cadastrar Novo Produto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ url_for('pedidos.novo_produto') }}" method="POST">
+          <div class="modal-body">
+              <div class="mb-3"><label class="form-label">Descrição do Produto</label><input type="text" name="descricao" class="form-control" required></div>
+              <div class="mb-3"><label class="form-label">Valor (R$)</label><input type="text" inputmode="decimal" name="valor" class="form-control" required></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <button type="submit" class="btn btn-primary">Salvar Produto</button>
+          </div>
+      </form>
     </div>
+  </div>
+</div>
+
+<template id="item-row-template">
+    <tr class="item-row align-middle">
+        <input type="hidden" class="item-produto-id" name="produto_id[]">
+        <td class="item-descricao fw-bold"></td>
+        <td style="width: 100px;"><input type="number" class="form-control form-control-sm item-quantidade" name="item_quantidade[]" value="1" min="1" required></td>
+        <td class="item-valor-unitario text-muted small"></td>
+        <td class="item-total text-end fw-bold"></td>
+        <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm border-0 remove-item-btn">&times;</button></td>
+    </tr>
 </template>
 {% endblock %}
 
@@ -178,7 +192,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const addItemBtn = document.getElementById('add-item-btn');
     const selectProduto = document.getElementById('select-produto');
-    const itensContainer = document.getElementById('itens-container');
+    const itensTableBody = document.getElementById('itens-table-body');
     const template = document.getElementById('item-row-template');
 
     if(addItemBtn) {
@@ -197,12 +211,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const newRow = clone.querySelector('.item-row');
         
         newRow.querySelector('.item-produto-id').value = selectedOption.value;
-        newRow.querySelector('.item-descricao').value = selectedOption.text;
+        newRow.querySelector('.item-descricao').textContent = selectedOption.text;
         
         const valor = parseFloat(selectedOption.dataset.valor);
-        newRow.querySelector('.item-valor-unitario').value = valor.toFixed(2).replace('.', ',');
-
-        itensContainer.appendChild(clone);
+        newRow.querySelector('.item-valor-unitario').textContent = 'R$ ' + valor.toFixed(2).replace('.', ',');
+        
+        newRow.classList.add('new-item'); // Para o efeito de highlight
+        
+        itensTableBody.appendChild(clone);
         attachRowEventListeners(newRow);
         updateTotals();
         selectProduto.selectedIndex = 0;
@@ -213,17 +229,23 @@ document.addEventListener('DOMContentLoaded', function() {
             row.remove();
             updateTotals();
         });
-        row.addEventListener('update-item', updateTotals);
+        row.querySelector('.item-quantidade').addEventListener('input', updateTotals);
+    }
+    
+    const deliveryFeeInput = document.querySelector('[name="valor_entrega"]');
+    if(deliveryFeeInput) {
+        deliveryFeeInput.addEventListener('input', updateTotals);
     }
 });
 
 function updateTotals() {
     let grandTotal = 0;
-    document.querySelectorAll('#itens-container .item-row').forEach(row => {
+    document.querySelectorAll('#itens-table-body .item-row').forEach(row => {
         const qty = parseFloat(row.querySelector('.item-quantidade').value) || 0;
-        const price = parseFloat(row.querySelector('.item-valor-unitario').value.replace(',', '.')) || 0;
+        const priceText = row.querySelector('.item-valor-unitario').textContent.replace('R$ ', '').replace(',', '.');
+        const price = parseFloat(priceText) || 0;
         const itemTotal = qty * price;
-        row.querySelector('.item-total').value = itemTotal.toFixed(2).replace('.', ',');
+        row.querySelector('.item-total').textContent = 'R$ ' + itemTotal.toFixed(2).replace('.', ',');
         grandTotal += itemTotal;
     });
 
@@ -231,7 +253,7 @@ function updateTotals() {
     const deliveryFee = parseFloat(deliveryFeeInput.value.replace(',', '.')) || 0;
     grandTotal += deliveryFee;
 
-    document.getElementById('grand-total').value = grandTotal.toFixed(2).replace('.', ',');
+    document.getElementById('grand-total').textContent = 'R$ ' + grandTotal.toFixed(2).replace('.', ',');
 }
 </script>
 {% endblock %}
