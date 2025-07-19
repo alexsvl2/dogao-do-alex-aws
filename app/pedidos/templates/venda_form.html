@@ -189,6 +189,40 @@
 
 {% block scripts %}
 <script>
+    // Novo Javascript completo para o popup de clientes e o resto do formulário
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Lógica para o Modal de Clientes ---
+    const filtroClienteInput = document.getElementById('filtro-cliente');
+    const listaClientes = document.getElementById('lista-clientes-modal');
+    const todosClientes = Array.from(listaClientes.getElementsByClassName('item-cliente'));
+    const clienteNomeDisplay = document.getElementById('cliente_nome_display');
+    const clienteIdHidden = document.getElementById('cliente_id_hidden');
+    const modalElement = document.getElementById('selecionarClienteModal');
+    const selecionarClienteModal = new bootstrap.Modal(modalElement);
+
+    // Filtra a lista de clientes no popup
+    filtroClienteInput.addEventListener('input', function() {
+        const termo = this.value.toLowerCase();
+        todosClientes.forEach(cliente => {
+            const nome = cliente.dataset.nome.toLowerCase();
+            if (nome.includes(termo)) {
+                cliente.style.display = 'block';
+            } else {
+                cliente.style.display = 'none';
+            }
+        });
+    });
+
+    // Ação ao clicar em um cliente na lista do popup
+    todosClientes.forEach(cliente => {
+        cliente.addEventListener('click', function(e) {
+            e.preventDefault();
+            clienteNomeDisplay.value = this.dataset.nome;
+            clienteIdHidden.value = this.dataset.id;
+            selecionarClienteModal.hide(); // Fecha o popup
+        });
+    });
+
 document.addEventListener('DOMContentLoaded', function() {
     const addItemBtn = document.getElementById('add-item-btn');
     const selectProduto = document.getElementById('select-produto');
