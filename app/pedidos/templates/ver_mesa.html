@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Mesa {{ mesa.numero }} - Pedido #{{ pedido.id }}</h1>
+    <a href="{{ url_for('pedidos.gerenciar_mesas') }}" class="btn btn-outline-secondary">Voltar para Mesas</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">Adicionar Itens ao Pedido</div>
+            <div class="card-body">
+                <form action="{{ url_for('pedidos.add_item_mesa', pedido_id=pedido.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Produto</label>
+                        <select name="produto_id" class="form-select" required>
+                            <option value="" selected disabled>Selecione...</option>
+                            {% for produto in produtos %}
+                            <option value="{{ produto.id }}">{{ produto.descricao }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade</label>
+                        <input type="number" name="quantidade" class="form-control" value="1" min="1">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Adicionar ao Pedido</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">Consumo da Mesa</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Qtd.</th>
+                                <th>Item</th>
+                                <th class="text-end">V. Un.</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pedido.itens %}
+                            <tr>
+                                <td>{{ item.quantidade }}</td>
+                                <td>{{ item.produto_descricao }}</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(item.valor_unitario)|replace('.',',') }}</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(item.quantidade * item.valor_unitario)|replace('.',',') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted">Nenhum item lançado.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-bold fs-5">
+                                <td colspan="3" class="text-end">Total:</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(pedido.valor_total)|replace('.',',') }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% if pedido.itens %}
+                <form action="{{ url_for('pedidos.fechar_conta', pedido_id=pedido.id) }}" method="POST" class="mt-3 d-grid">
+                    <button type="submit" class="btn btn-success btn-lg" onclick="return confirm('Tem certeza que deseja fechar esta conta? A ação não pode ser desfeita.')">Fechar Conta e Imprimir</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

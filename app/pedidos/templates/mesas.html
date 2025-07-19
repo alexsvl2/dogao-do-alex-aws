@@ -2,11 +2,27 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h2">Gerenciamento de Mesas</h1>
-    <a href="{{ url_for('pedidos.dashboard') }}" class="btn btn-outline-secondary">Voltar</a>
+    <h1 class="h2">Controle de Mesas</h1>
+    <a href="{{ url_for('pedidos.dashboard') }}" class="btn btn-outline-secondary">Voltar ao Menu</a>
 </div>
 
-<div class="text-center py-5">
-    <p class="lead text-muted">Funcionalidade de controle de mesas em construção.</p>
+<div class="row g-4">
+    {% for mesa in mesas %}
+    <div class="col-6 col-md-3">
+        {% if mesa.pedido_aberto %}
+        <a href="{{ url_for('pedidos.ver_mesa', mesa_id=mesa.id) }}" class="menu-button btn-danger">
+            <i class="bi bi-cup-straw icon"></i>
+            <span>Mesa {{ mesa.numero }}</span>
+            <small>Total: R$ {{ "%.2f"|format(mesa.pedido_aberto.valor_total)|replace('.', ',') }}</small>
+        </a>
+        {% else %}
+        <a href="{{ url_for('pedidos.ver_mesa', mesa_id=mesa.id) }}" class="menu-button btn-success">
+            <i class="bi bi-cup icon"></i>
+            <span>Mesa {{ mesa.numero }}</span>
+            <small>Livre</small>
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}
