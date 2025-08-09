@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Painel de Pedidos</h1>
+    <div class="btn-toolbar">
+        <a href="{{ url_for('auth.index') }}" class="btn btn-outline-secondary me-2">Menu Principal</a>
+        <div class="btn-group me-2">
+            <a href="{{ url_for('pedidos.gerenciar_clientes') }}" class="btn btn-sm btn-outline-secondary">Clientes</a>
+            <a href="{{ url_for('pedidos.gerenciar_produtos') }}" class="btn btn-sm btn-outline-secondary">Produtos</a>
+        </div>
+        <a href="{{ url_for('pedidos.historico') }}" class="btn btn-sm btn-outline-secondary">Histórico</a>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="d-grid gap-2 mb-4">
+    <button class="btn btn-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#novoPedidoModal">
+        + Novo Pedido
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Pedidos do Dia</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">#ID</th>
+                        <th scope="col">Cliente / Tipo</th>
+                        <th scope="col">Itens</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Hora</th>
+                        <th scope="col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>{{ pedido.id }}</td>
+                        <td>{{ pedido.nome_cliente }} <br><small class="text-muted">{{pedido.tipo_pedido}}</small></td>
+                        <td>
+                            <ul class="list-unstyled mb-0 small">
+                                {% for item in pedido.itens %}
+                                <li>{{ item.quantidade }}x {{ item.produto_descricao }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td class="fw-bold">R$ {{ "%.2f"|format(pedido.valor_total)|replace('.', ',') }}</td>
+                        <td>{{ pedido.data_pedido.strftime('%H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('pedidos.imprimir_pedido', pedido_id=pedido.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank" title="Imprimir">🖨️</a>
+                            <a href="{{ url_for('pedidos.editar_pedido', pedido_id=pedido.id) }}" class="btn btn-sm btn-outline-warning" title="Editar">✏️</a>
+                            <form action="{{ url_for('pedidos.excluir_pedido', pedido_id=pedido.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir este pedido?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Nenhum pedido hoje ainda.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="novoPedidoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cadastrar Novo Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-novo-pedido" action="{{ url_for('pedidos.novo_pedido') }}" method="POST">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-7">
+                            <label class="form-label">Cliente</label>
+                            <select class="form-select" name="cliente_id" id="select-cliente" required>
+                                <option value="" selected disabled>Selecione um cliente...</option>
+                                {% for cliente in clientes %}
+                                <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" name="tipo_pedido" onchange="toggleDeliveryFieldsModal(this.value)">
+                                <option value="Retirada" selected>Retirada no Balcão</option>
+                                <option value="Delivery">Delivery</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <h5>Itens do Pedido</h5>
+                    <div class="row mb-3 align-items-end">
+                        <div class="col-md-7">
+                            <label class="form-label">Produto</label>
+                            <select id="select-produto" class="form-select">
+                                <option value="" selected disabled>Selecione um produto para adicionar...</option>
+                                {% for produto in produtos %}
+                                <option value="{{ produto.id }}" data-valor="{{ produto.valor }}">{{ produto.descricao }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <button type="button" class="btn btn-outline-primary w-100" id="add-item-btn">Adicionar Produto</button>
+                        </div>
+                    </div>
+                    <div id="itens-container" class="mb-3"></div>
+                    <hr class="my-4">
+                    <div class="row mt-3 align-items-center">
+                        <div class="col-lg-6" id="delivery-fee-modal" style="display: none;">
+                            <div class="row align-items-center">
+                                <label class="col-sm-5 col-form-label fw-bold">Taxa de Entrega (R$)</label>
+                                <div class="col-sm-7">
+                                    <input type="text" class="form-control" name="valor_entrega" value="0,00" oninput="updateTotals()">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 ms-auto">
+                            <div class="row align-items-center">
+                                <label class="col-sm-5 col-form-label fs-5 fw-bold text-end">TOTAL (R$)</label>
+                                <div class="col-sm-7">
+                                    <input type="text" class="form-control fs-5 fw-bold text-end" id="grand-total" value="0,00" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<template id="item-row-template">
+    <div class="row g-2 mb-2 align-items-center item-row">
+        <input type="hidden" class="item-produto-id" name="produto_id[]">
+        <div class="col-md-5"><input type="text" class="form-control item-descricao" readonly></div>
+        <div class="col-md-2"><input type="number" class="form-control item-quantidade" name="item_quantidade[]" value="1" min="1" required oninput="this.closest('.item-row').dispatchEvent(new Event('update-item'));"></div>
+        <div class="col-md-2"><input type="text" class="form-control item-valor-unitario" readonly></div>
+        <div class="col-md-2"><input type="text" class="form-control text-end item-total" readonly></div>
+        <div class="col-md-1"><button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">X</button></div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Todo o seu Javascript que já funcionava
+</script>
+{% endblock %}
